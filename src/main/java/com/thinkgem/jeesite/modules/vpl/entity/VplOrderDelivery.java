@@ -28,6 +28,7 @@ public class VplOrderDelivery extends DataEntity<VplOrderDelivery> {
 	private String workType;		//颜色类型
 	private String cusName;		// 客户名称
 	private Date deliveryDate;		// 出货日期
+	private int status;				//状态审核
 	private String startDateStr; //送货筛选时间
 	private String endDateStr; //送货筛选时间
 	private Date startDate;   //送货结束时间
@@ -125,6 +126,15 @@ public class VplOrderDelivery extends DataEntity<VplOrderDelivery> {
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 	public Date getDeliveryDate() {
 		return deliveryDate;
+	}
+
+	@Length(min=0, max=255, message="审核状态不能为空")
+	public int getStatus() {
+		return status;
+	}
+
+	public void setStatus(int status) {
+		this.status = status;
 	}
 
 	public void setDeliveryDate(Date deliveryDate) {

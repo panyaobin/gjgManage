@@ -15,6 +15,7 @@
 		a.work_type AS "workType",
 		a.cus_name AS "cusName",
 		a.delivery_date AS "deliveryDate",
+		a.status AS "status",
 		a.create_by AS "createBy.id",
 		a.create_date AS "createDate",
 		a.update_by AS "updateBy.id",
@@ -44,6 +45,12 @@
 			<if test="cusName != null and cusName != ''">
 				AND a.cus_name LIKE concat('%', #{cusName},'%')
 			</if>
+			<if test="orderId != null and orderId != ''">
+				AND a.order_id = #{orderId}
+			</if>
+			<if test="deliveryId != null and deliveryId != ''">
+				AND a.delivery_id = #{deliveryId}
+			</if>
 			<if test="startDate != null and startDate != ''">
 				AND a.delivery_date &gt;= #{startDate}
 			</if>
@@ -56,6 +63,10 @@
 			<if test="endDateStr!= null and endDateStr != ''">
 				AND a.delivery_date &lt;= #{endDateStr}
 			</if>
+			<if test="status!= null and status != ''">
+				AND a.status= #{status}
+			</if>
+
 		</where>
 		<choose>
 			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
@@ -98,6 +109,7 @@
 			work_type,
 			cus_name,
 			delivery_date,
+			status,
 			create_by,
 			create_date,
 			update_by,
@@ -116,6 +128,7 @@
 			#{workType},
 			#{cusName},
 			#{deliveryDate},
+			#{status},
 			#{createBy.id},
 			#{createDate},
 			#{updateBy.id},
@@ -138,6 +151,7 @@
 			work_type = #{workType},
 			cus_name = #{cusName},
 			delivery_date = #{deliveryDate},
+			status = #{status},
 			update_by = #{updateBy.id},
 			update_date = #{updateDate},
 			remarks = #{remarks}

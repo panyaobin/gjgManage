@@ -43,6 +43,7 @@
             <form:input path="cusNo" placeholder="请输入客户代码" htmlEscape="false" maxlength="16" class="input-xlarge  cusNo"
                         required="required"/>
             <span class="help-inline"><font color="red">*</font> </span>
+            <span class="help-inline"><font color="red">(客户编码为数字编码！比如：101……)</font> </span>
         </div>
     </div>
     <div class="control-group">

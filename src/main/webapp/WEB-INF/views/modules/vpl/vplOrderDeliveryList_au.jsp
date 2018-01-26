@@ -33,7 +33,7 @@
                         }
                     });
                 }else{
-                    alert('请选择需要批量处理的数据！');
+                    layer.msg("请选择需要批量处理的数据！");
                 }
             });
             //重置按钮刷新页面
@@ -41,24 +41,14 @@
                 $("#c").val("");
                 $("#start").val("");
                 $("#end").val("");
-                location.href="${ctx}/vpl/vplOrderDelivery";
+                location.href="${ctx}/vpl/vplOrderDelivery/audit";
             });
 
             $("#print").click(function () {
-                debugger;
-                var ids = getAllCheckId();
-                if(ids !="" && ids != null){
-                    $.ajax({
-                        type: 'post',
-                        url: "${ctx}/vpl/vplOrderDelivery/audit",
-                        data: {ids:ids} ,
-                        success: function(data){
-                            location.href="${ctx}/vpl/vplOrderDelivery/audit";
-                        }
-                    });
-                }else{
-                    alert('请选择需要批量处理的数据！');
-                }
+                var a=$("#startD").val();
+                var b=$("#endD").val();
+                var c=$("#c").val();
+                location.href="${ctx}/vpl/vplOrderDelivery/deliveryPrint?fileName='出货单'&cusName="+c+"&startDateStr="+a+"&endDateStr="+b+"";
             });
         });
 
@@ -88,11 +78,11 @@
             name="vpl:vplOrderImport:edit">查看</shiro:lacksPermission></a></li>
     <li><a href="${ctx}/vpl/vplOrderImport/">订单列表</a></li>
     <li><a href="${ctx}/vpl/vplOrderImport/list?remarks=online">在线产品</a></li>
-    <li class="active"><a href="${ctx}/vpl/vplOrderDelivery/">待审核</a></li>
-    <li><a href="${ctx}/vpl/vplOrderDelivery/audit">已审核</a></li>
+    <li><a href="${ctx}/vpl/vplOrderDelivery/">待审核</a></li>
+    <li class="active"><a href="${ctx}/vpl/vplOrderDelivery/audit">已审核</a></li>
     <li><a href="${ctx}/vpl/vplOrderDelivery/summary">小结</a></li>
 </ul>
-<form:form id="searchForm" modelAttribute="vplOrderDelivery" action="${ctx}/vpl/vplOrderDelivery" method="post" class="breadcrumb form-search">
+<form:form id="searchForm" modelAttribute="vplOrderDelivery" action="${ctx}/vpl/vplOrderDelivery/audit" method="post" class="breadcrumb form-search">
     <input id="pageNo" name="pageNo" type="hidden" value="${page.pageNo}"/>
     <input id="pageSize" name="pageSize" type="hidden" value="${page.pageSize}"/>
     <ul class="ul-form">
@@ -112,7 +102,7 @@
         </li>
         <li class="btns"><input id="btnSubmit" class="btn btn-primary" type="submit" value="查询"/></li>
         <li class="btns"><input id="reset" class="btn btn-primary" type="button" value="刷新"/></li>
-        <li class="btns"><input id="print" class="btn btn-primary" type="button" value="出货审核"/></li>
+        <li class="btns"><input id="print" class="btn btn-primary" type="button" value="导出数据"/></li>
             <%--<li class="btns"><a href="${ctx}/tsy/tsyOrderDelivery/deliveryPrint?fileName='出货单'" class="btn btn-primary">导出数据</a></li>--%>
 
             <%--<li class="btns"><input id="batchDel" class="btn btn-primary" type="button" value="批量删除"/></li>--%>

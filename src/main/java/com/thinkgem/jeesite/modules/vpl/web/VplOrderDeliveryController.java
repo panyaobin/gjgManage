@@ -8,6 +8,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.thinkgem.jeesite.common.utils.utils.excel.ExcelFactory;
 import com.thinkgem.jeesite.common.utils.utils.excel.XSSFExcel;
+import com.thinkgem.jeesite.modules.sys.entity.Dict;
+import com.thinkgem.jeesite.modules.sys.service.DictService;
 import com.thinkgem.jeesite.modules.vpl.entity.*;
 import com.thinkgem.jeesite.modules.vpl.service.VplCustomerService;
 import com.thinkgem.jeesite.modules.vpl.service.VplOrderImportService;
@@ -54,6 +56,9 @@ public class VplOrderDeliveryController extends BaseController {
     @Autowired
     private VplCustomerService vplCustomerService;
 
+    @Autowired
+    private DictService dictService;
+
     @ModelAttribute
     public VplOrderDelivery get(@RequestParam(required = false) String id) {
         VplOrderDelivery entity = null;
@@ -75,9 +80,34 @@ public class VplOrderDeliveryController extends BaseController {
         if (StringUtils.isNotBlank(endDateStr)) {
             vplOrderDelivery.setEndDate(new SimpleDateFormat("yyyy-MM-dd").parse(endDateStr));
         }
+        vplOrderDelivery.setStatus(0);
         Page<VplOrderDelivery> page = vplOrderDeliveryService.findPage(new Page<VplOrderDelivery>(request, response), vplOrderDelivery);
         model.addAttribute("page", page);
         return "modules/vpl/vplOrderDeliveryList_2";
+    }
+
+    @RequiresPermissions("vpl:vplOrderDelivery:view")
+    @RequestMapping(value = "audit")
+    public String auditList(String ids, VplOrderDelivery vplOrderDelivery, String startDateStr, String endDateStr, HttpServletRequest request, HttpServletResponse response, Model model) throws ParseException {
+        if (null != ids && ids.length() != 0) {
+            String[] arr = ids.split(",");
+            for (int i = 0; i < arr.length; i++) {
+                VplOrderDelivery vp = new VplOrderDelivery();
+                vp = vplOrderDeliveryService.get(arr[i]);
+                vp.setStatus(1);
+                vplOrderDeliveryService.save(vp);
+            }
+        }
+        if (StringUtils.isNotBlank(startDateStr)) {
+            vplOrderDelivery.setStartDate(new SimpleDateFormat("yyyy-MM-dd").parse(startDateStr));
+        }
+        if (StringUtils.isNotBlank(endDateStr)) {
+            vplOrderDelivery.setEndDate(new SimpleDateFormat("yyyy-MM-dd").parse(endDateStr));
+        }
+        vplOrderDelivery.setStatus(1);
+        Page<VplOrderDelivery> page = vplOrderDeliveryService.findPage(new Page<VplOrderDelivery>(request, response), vplOrderDelivery);
+        model.addAttribute("page", page);
+        return "modules/vpl/vplOrderDeliveryList_au";
     }
 
     @RequiresPermissions("vpl:vplOrderDelivery:view")
@@ -94,19 +124,19 @@ public class VplOrderDeliveryController extends BaseController {
         vplOrderImport.setRemarks("online");
         Page<VplOrderImport> p = vplOrderImportService.findPage(new Page<VplOrderImport>(request, response), vplOrderImport);
         Double onlineCount = 0.000;
-        if (null!=p&&null!=p.getList()&&p.getList().size()>0){
-            List<VplOrderImport> t=p.getList();
-            for (int i = 0; i <t.size() ; i++) {
-                Double leng= Double.parseDouble(t.get(i).getLeng());
-                Double wide= Double.parseDouble(t.get(i).getWide());
-                Double counts= Double.parseDouble(t.get(i).getCounts());
-                Double hCounts= Double.parseDouble(t.get(i).getHasCounts());
-                Double c=counts-hCounts;
-                Double d=leng*wide*c/1000000;
-                onlineCount+=d;
+        if (null != p && null != p.getList() && p.getList().size() > 0) {
+            List<VplOrderImport> t = p.getList();
+            for (int i = 0; i < t.size(); i++) {
+                Double leng = Double.parseDouble(t.get(i).getLeng());
+                Double wide = Double.parseDouble(t.get(i).getWide());
+                Double counts = Double.parseDouble(t.get(i).getCounts());
+                Double hCounts = Double.parseDouble(t.get(i).getHasCounts());
+                Double c = counts - hCounts;
+                Double d = leng * wide * c / 1000000;
+                onlineCount += d;
             }
         }
-        model.addAttribute("onlineCount",onlineCount); //在线产品面积
+        model.addAttribute("onlineCount", onlineCount); //在线产品面积
 
         //当日出货
         VplOrderDelivery vplOrderDelivery = new VplOrderDelivery();
@@ -114,71 +144,71 @@ public class VplOrderDeliveryController extends BaseController {
         vplOrderDelivery.setEndDateStr(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
         Page<VplOrderDelivery> page = vplOrderDeliveryService.findPage(new Page<VplOrderDelivery>(request, response), vplOrderDelivery);
         Double dayDeliCount = 0.000;
-        if (null!=page&&page.getList().size()>0){
-            for (int i = 0; i <page.getList().size() ; i++) {
-                Double leng= Double.parseDouble(page.getList().get(i).getLeng());
-                Double wide= Double.parseDouble(page.getList().get(i).getWide());
-                Double counts= Double.parseDouble(page.getList().get(i).getCounts());
-                Double d=leng*wide*counts/1000000;
-                dayDeliCount+=d;
+        if (null != page && page.getList().size() > 0) {
+            for (int i = 0; i < page.getList().size(); i++) {
+                Double leng = Double.parseDouble(page.getList().get(i).getLeng());
+                Double wide = Double.parseDouble(page.getList().get(i).getWide());
+                Double counts = Double.parseDouble(page.getList().get(i).getCounts());
+                Double d = leng * wide * counts / 1000000;
+                dayDeliCount += d;
             }
         }
-        model.addAttribute("dayDeliCount",dayDeliCount); //当日出货产品面积
+        model.addAttribute("dayDeliCount", dayDeliCount); //当日出货产品面积
 
         //当日下单
         VplOrderImport tsyOrderImport1 = new VplOrderImport();
         tsyOrderImport1.setOrderDateStr(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
-        Page<VplOrderImport> page1= vplOrderImportService.findPage(new Page<VplOrderImport>(request, response), tsyOrderImport1);
+        Page<VplOrderImport> page1 = vplOrderImportService.findPage(new Page<VplOrderImport>(request, response), tsyOrderImport1);
         Double dayImpCount = 0.000;
-        if (null!=page1&&page1.getList().size()>0){
-            for (int i = 0; i <page1.getList().size() ; i++) {
-                Double leng= Double.parseDouble(page1.getList().get(i).getLeng());
-                Double wide= Double.parseDouble(page1.getList().get(i).getWide());
-                Double counts= Double.parseDouble(page1.getList().get(i).getCounts());
-                Double d=leng*wide*counts/1000000;
-                dayImpCount+=d;
+        if (null != page1 && page1.getList().size() > 0) {
+            for (int i = 0; i < page1.getList().size(); i++) {
+                Double leng = Double.parseDouble(page1.getList().get(i).getLeng());
+                Double wide = Double.parseDouble(page1.getList().get(i).getWide());
+                Double counts = Double.parseDouble(page1.getList().get(i).getCounts());
+                Double d = leng * wide * counts / 1000000;
+                dayImpCount += d;
             }
         }
-        model.addAttribute("dayImpCount",dayImpCount); //当日出货产品面积
+        model.addAttribute("dayImpCount", dayImpCount); //当日出货产品面积
 
         //昨天出货
         VplOrderDelivery vplOrderDelivery2 = new VplOrderDelivery();
-        Calendar   cal   =   Calendar.getInstance();
-        cal.add(Calendar.DATE,   -1);
-        String yesterday = new SimpleDateFormat( "yyyy-MM-dd ").format(cal.getTime());
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.DATE, -1);
+        String yesterday = new SimpleDateFormat("yyyy-MM-dd ").format(cal.getTime());
         vplOrderDelivery2.setStartDateStr(yesterday);
         vplOrderDelivery2.setEndDateStr(yesterday);
         Page<VplOrderDelivery> page2 = vplOrderDeliveryService.findPage(new Page<VplOrderDelivery>(request, response), vplOrderDelivery2);
         Double yesDeliCount = 0.000;
-        if (null!=page2&&page2.getList().size()>0){
-            for (int i = 0; i <page2.getList().size() ; i++) {
-                Double leng= Double.parseDouble(page2.getList().get(i).getLeng());
-                Double wide= Double.parseDouble(page2.getList().get(i).getWide());
-                Double counts= Double.parseDouble(page2.getList().get(i).getCounts());
-                Double d=leng*wide*counts/1000000;
-                yesDeliCount+=d;
+        if (null != page2 && page2.getList().size() > 0) {
+            for (int i = 0; i < page2.getList().size(); i++) {
+                Double leng = Double.parseDouble(page2.getList().get(i).getLeng());
+                Double wide = Double.parseDouble(page2.getList().get(i).getWide());
+                Double counts = Double.parseDouble(page2.getList().get(i).getCounts());
+                Double d = leng * wide * counts / 1000000;
+                yesDeliCount += d;
             }
         }
-        model.addAttribute("yesDeliCount",yesDeliCount); //昨天出货产品面积
+        model.addAttribute("yesDeliCount", yesDeliCount); //昨天出货产品面积
 
         //昨天下单
         VplOrderImport tsyOrderImport3 = new VplOrderImport();
-        Calendar   cal1   =   Calendar.getInstance();
-        cal1.add(Calendar.DATE,   -1);
-        String yesterday1 = new SimpleDateFormat( "yyyy-MM-dd ").format(cal.getTime());
+        Calendar cal1 = Calendar.getInstance();
+        cal1.add(Calendar.DATE, -1);
+        String yesterday1 = new SimpleDateFormat("yyyy-MM-dd ").format(cal.getTime());
         tsyOrderImport3.setOrderDate(cal.getTime());
-        Page<VplOrderImport> page3= vplOrderImportService.findPage(new Page<VplOrderImport>(request, response), tsyOrderImport3);
+        Page<VplOrderImport> page3 = vplOrderImportService.findPage(new Page<VplOrderImport>(request, response), tsyOrderImport3);
         Double dayDeLiCount = 0.00;
-        if (null!=page3&&page3.getList().size()>0){
-            for (int i = 0; i <page3.getList().size() ; i++) {
-                Double leng= Double.parseDouble(page3.getList().get(i).getLeng());
-                Double wide= Double.parseDouble(page3.getList().get(i).getWide());
-                Double counts= Double.parseDouble(page3.getList().get(i).getCounts());
-                Double d=leng*wide*counts/1000000;
-                dayDeLiCount+=d;
+        if (null != page3 && page3.getList().size() > 0) {
+            for (int i = 0; i < page3.getList().size(); i++) {
+                Double leng = Double.parseDouble(page3.getList().get(i).getLeng());
+                Double wide = Double.parseDouble(page3.getList().get(i).getWide());
+                Double counts = Double.parseDouble(page3.getList().get(i).getCounts());
+                Double d = leng * wide * counts / 1000000;
+                dayDeLiCount += d;
             }
         }
-        model.addAttribute("dayDeLiCount",dayDeLiCount); //昨天出货产品面积
+        model.addAttribute("dayDeLiCount", dayDeLiCount); //昨天出货产品面积
 
 
         //当月出货
@@ -187,30 +217,30 @@ public class VplOrderDeliveryController extends BaseController {
         //获取前月的第一天
         String firstDay;
         String lastDay;
-        Calendar   cal_1=Calendar.getInstance();//获取当前日期
+        Calendar cal_1 = Calendar.getInstance();//获取当前日期
         cal_1.add(Calendar.MONTH, 0);
-        cal_1.set(Calendar.DAY_OF_MONTH,1);//设置为1号,当前日期既为本月第一天
+        cal_1.set(Calendar.DAY_OF_MONTH, 1);//设置为1号,当前日期既为本月第一天
         firstDay = new SimpleDateFormat("yyyy-MM-dd").format(cal_1.getTime());
         //获取前月的最后一天
         Calendar cale = Calendar.getInstance();
-        cale.set(Calendar.DAY_OF_MONTH,cale.getActualMaximum(Calendar.DAY_OF_MONTH));//设置为1号,当前日期既为本月第一天
-        lastDay =new SimpleDateFormat("yyyy-MM-dd").format(cale.getTime());
+        cale.set(Calendar.DAY_OF_MONTH, cale.getActualMaximum(Calendar.DAY_OF_MONTH));//设置为1号,当前日期既为本月第一天
+        lastDay = new SimpleDateFormat("yyyy-MM-dd").format(cale.getTime());
 
 
         vplOrderDelivery4.setStartDateStr(firstDay);
         vplOrderDelivery4.setEndDateStr(lastDay);
         Page<VplOrderDelivery> page4 = vplOrderDeliveryService.findPage(new Page<VplOrderDelivery>(request, response), vplOrderDelivery4);
         Double monthDeliCount = 0.000;
-        if (null!=page4&&page4.getList().size()>0){
-            for (int i = 0; i <page4.getList().size() ; i++) {
-                Double leng= Double.parseDouble(page4.getList().get(i).getLeng());
-                Double wide= Double.parseDouble(page4.getList().get(i).getWide());
-                Double counts= Double.parseDouble(page4.getList().get(i).getCounts());
-                Double d=leng*wide*counts/1000000;
-                monthDeliCount+=d;
+        if (null != page4 && page4.getList().size() > 0) {
+            for (int i = 0; i < page4.getList().size(); i++) {
+                Double leng = Double.parseDouble(page4.getList().get(i).getLeng());
+                Double wide = Double.parseDouble(page4.getList().get(i).getWide());
+                Double counts = Double.parseDouble(page4.getList().get(i).getCounts());
+                Double d = leng * wide * counts / 1000000;
+                monthDeliCount += d;
             }
         }
-        model.addAttribute("monthDeliCount",new BigDecimal(monthDeliCount).setScale(2, RoundingMode.HALF_UP)); //当月出货产品面积
+        model.addAttribute("monthDeliCount", new BigDecimal(monthDeliCount).setScale(2, RoundingMode.HALF_UP)); //当月出货产品面积
 
 
         //当月下单
@@ -218,14 +248,14 @@ public class VplOrderDeliveryController extends BaseController {
         //获取前月的第一天
         String firstDay1;
         String lastDay1;
-        Calendar   cal_11=Calendar.getInstance();//获取当前日期
+        Calendar cal_11 = Calendar.getInstance();//获取当前日期
         cal_11.add(Calendar.MONTH, 0);
-        cal_11.set(Calendar.DAY_OF_MONTH,1);//设置为1号,当前日期既为本月第一天
+        cal_11.set(Calendar.DAY_OF_MONTH, 1);//设置为1号,当前日期既为本月第一天
         firstDay1 = new SimpleDateFormat("yyyy-MM-dd").format(cal_1.getTime());
         //获取前月的最后一天
         Calendar cale1 = Calendar.getInstance();
-        cale1.set(Calendar.DAY_OF_MONTH,cale1.getActualMaximum(Calendar.DAY_OF_MONTH));//设置为1号,当前日期既为本月第一天
-        lastDay1 =new SimpleDateFormat("yyyy-MM-dd").format(cale1.getTime());
+        cale1.set(Calendar.DAY_OF_MONTH, cale1.getActualMaximum(Calendar.DAY_OF_MONTH));//设置为1号,当前日期既为本月第一天
+        lastDay1 = new SimpleDateFormat("yyyy-MM-dd").format(cale1.getTime());
         tsyOrderImport4.set_monthOrderDateS(firstDay1);
         tsyOrderImport4.set_monthOrderDateE(lastDay1);
 
@@ -240,7 +270,7 @@ public class VplOrderDeliveryController extends BaseController {
                 monthImpCount+=d;
             }
         }*/
-       // model.addAttribute("monthImpCount",new BigDecimal(monthImpCount).setScale(2, RoundingMode.HALF_UP)); //昨天出货产品面积
+        // model.addAttribute("monthImpCount",new BigDecimal(monthImpCount).setScale(2, RoundingMode.HALF_UP)); //昨天出货产品面积
 
         return "modules/vpl/vplSummary";
     }
@@ -294,13 +324,13 @@ public class VplOrderDeliveryController extends BaseController {
             VplCustomer vplCustomer = new VplCustomer();
             vplCustomer.setCusNo(vplOrderImportService.get(arr[0]).getCusName());
             Page<VplCustomer> page = vplCustomerService.findPage(new Page<VplCustomer>(request, response), vplCustomer);
-            model.addAttribute("_cusName",page.getList().get(0).getCusName());
+            model.addAttribute("_cusName", page.getList().get(0).getCusName());
             //每次查询出
             VplOrderDelivery vplOrderDelivery = new VplOrderDelivery();
 
             System.out.println(vplOrderImportService.get(arr[0]).getCusName() + "-----------------------------------");
 
-            vplOrderDelivery.setCusName(vplOrderImportService.get(arr[0]).getCusName());
+            vplOrderDelivery.setCusName(page.getList().get(0).getCusName());
             Page<VplOrderDelivery> page2 = vplOrderDeliveryService.findPage(new Page<VplOrderDelivery>(request, response), vplOrderDelivery);
             if (page2.getList().size() > 0) {
                 int id = Integer.parseInt(page2.getList().get(0).getDeliveryId());
@@ -338,7 +368,22 @@ public class VplOrderDeliveryController extends BaseController {
                 vpl.setWide(orderDeList.getOrderDeList().get(i).getWide());
                 vpl.setCounts(orderDeList.getOrderDeList().get(i).getCounts());
                 vpl.setPrice(orderDeList.getOrderDeList().get(i).getPrice());
-                vpl.setSideType(orderDeList.getOrderDeList().get(i).getSideType());
+
+
+                //这里需要根据 类型ID 和客户名称查询出对应的报价
+                VplCustomer vplCustomer = new VplCustomer();
+                vplCustomer.setCusName(vplOrderDelivery.getCusName());
+                vplCustomer.setTypeId(orderDeList.getOrderDeList().get(i).getSideType());
+                Page<VplCustomer> page = vplCustomerService.findPage(new Page<VplCustomer>(request, response), vplCustomer);
+                vpl.setPrice(page.getList().get(0).getPrice());
+
+                //这里根据 sidetypeid查询加工类型
+                Dict dict = new Dict();
+                dict.setType("vpl_side_type");
+                dict.setValue(orderDeList.getOrderDeList().get(i).getSideType());
+                Page<Dict> dictp = dictService.findPage(new Page<Dict>(request, response), dict);
+                vpl.setSideType(dictp.getList().get(0).getLabel());
+
                 //这里新增颜色参数，进入出货单
                 vpl.setWorkType(orderDeList.getOrderDeList().get(i).getWorkType());
                 vpl.setCusName(vplOrderDelivery.getCusName());
@@ -349,12 +394,6 @@ public class VplOrderDeliveryController extends BaseController {
                 vplOrderDeliveryService.save(vpl);
                 addMessage(redirectAttributes, "送货单录入成功");
 
-                //出货单提交之后，修改订单中 出货数量
-                //通过每条数据的订单号和客户型号，查找到对应的订单号，从而修改数量
-				/*VplOrderImport tsyim=new VplOrderImport();
-				tsyim.setProModel(orderDeList.getOrderDeList().get(i).getProModel());
-				tsyim.setOrderId(orderDeList.getOrderDeList().get(i).getOrderId());
-				Page<VplOrderImport> page = vplOrderImportService.findPage(new Page<VplOrderImport>(request, response), tsyim);*/
 
                 //通过订单号和产品型号查询出该订单已出货数量
                 //传入已经出货数量，累计修改已出货数量
@@ -369,9 +408,7 @@ public class VplOrderDeliveryController extends BaseController {
         model.addAttribute("tsyOrderDelivery", vplOrderDelivery);
         Page<VplOrderDelivery> page = vplOrderDeliveryService.findPage(new Page<VplOrderDelivery>(request, response), vplOrderDelivery);
         model.addAttribute("page", page);
-		/*if (tsyOrderDelivery.getCusName().equals("凯强")){
-			return "modules/tsy/tsyPrintView_tsy";
-		}*/
+        model.addAttribute("dates", new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
         return "modules/vpl/vplPrintView";
     }
 
@@ -404,13 +441,13 @@ public class VplOrderDeliveryController extends BaseController {
         if (StringUtils.isNotBlank(endDateStr)) {
             vplOrderDelivery.setEndDate(new SimpleDateFormat("yyyy-MM-dd").parse(endDateStr));
         }
-
+        vplOrderDelivery.setStatus(1);
         Page<VplOrderDelivery> page = vplOrderDeliveryService.findPage(new Page<VplOrderDelivery>(request, response), vplOrderDelivery);
         List<VplOrderDelivery> list = page.getList();
         if (null != list && list.size() > 0) {
             String[] titles = {"序号", "送货日期", "送货单号", "客户型号", "客户名称", "宽", "长", "订单号", "单价", "送货数量", "单位", "出货平米", "金额", "类型", "备注"}; // 标题
             List<Map<String, Object>> datas = new ArrayList<>();
-            for (int i = 0; i <list.size(); i++) {
+            for (int i = 0; i < list.size(); i++) {
                 if (StringUtils.isNotBlank(list.get(i).getProModel())) {
                     Map<String, Object> data = new LinkedHashMap<>();
                     data.put("a", String.valueOf(i + 1));
@@ -418,7 +455,7 @@ public class VplOrderDeliveryController extends BaseController {
                     data.put("b1", list.get(i).getDeliveryId());
                     data.put("c", list.get(i).getProModel());
                     data.put("c1", list.get(i).getCusName());
-                    data.put("d",Double.valueOf(list.get(i).getWide()));
+                    data.put("d", Double.valueOf(list.get(i).getWide()));
                     data.put("e", Double.valueOf(list.get(i).getLeng()));
                     data.put("f", list.get(i).getOrderId());
                     data.put("g", Double.valueOf(list.get(i).getPrice()));
@@ -428,14 +465,15 @@ public class VplOrderDeliveryController extends BaseController {
                     //计算面积 长*宽*数量
                     double q = Double.parseDouble(list.get(i).getLeng());
                     double w = Double.parseDouble(list.get(i).getCounts());
-                    double qq = w * q * 250 / 1000000;
+                    double ww = Double.parseDouble(list.get(i).getWide());
+                    double qq = w * q * ww / 1000000;
                     data.put("j", new BigDecimal(qq).setScale(3, RoundingMode.HALF_UP));
 
                     //计算金额 面积*单价
                     double price = Double.parseDouble(list.get(i).getPrice());
-                    data.put("k", new BigDecimal(qq*price).setScale(2, RoundingMode.HALF_UP));
+                    data.put("k", new BigDecimal(qq * price).setScale(2, RoundingMode.HALF_UP));
 
-                   // data.put("k", "面积");
+                    // data.put("k", "面积");
                     data.put("l", list.get(i).getSideType());
                     data.put("m", list.get(i).getRemarks());
                     datas.add(data);

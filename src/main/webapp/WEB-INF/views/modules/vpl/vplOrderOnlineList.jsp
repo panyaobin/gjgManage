@@ -90,7 +90,7 @@
 				<th style="text-align: center">客户型号</th>
 				<th style="text-align: center">宽度</th>
 				<th style="text-align: center">长度</th>
-				<th style="text-align: center">订单数量</th>
+				<th style="text-align: center">在线数量</th>
 				<th style="text-align: center">面&nbsp;积</th>
 				<th style="text-align: center">加工类型</th>
 				<th style="text-align: center">铜&nbsp;厚</th>
@@ -122,9 +122,9 @@
 				<td style="text-align: center">${vplOrderImport.proModel}</td>
 				<td style="text-align: center">${vplOrderImport.wide}</td>
 				<td style="text-align: center">${vplOrderImport.leng}</td>
-				<td style="text-align: center">${vplOrderImport.counts}</td>
+				<td style="text-align: center">${vplOrderImport.counts-vplOrderImport.hasCounts}</td>
 				<td style="text-align: center">
-					<fmt:formatNumber type="number" value="${vplOrderImport.wide*vplOrderImport.leng*vplOrderImport.counts/1000000}" pattern="0.000" maxFractionDigits="3"/>
+					<fmt:formatNumber type="number" value="${vplOrderImport.wide*vplOrderImport.leng*(vplOrderImport.counts-vplOrderImport.hasCounts)/1000000}" pattern="0.000" maxFractionDigits="3"/>
 				</td>
 				<td style="text-align: center">${fns:getDictLabel(vplOrderImport.sideType, 'vpl_side_type', '')}</td>
 				<td style="text-align: center">${fns:getDictLabel(vplOrderImport.workType, 'vpl_work_type', '')}</td>

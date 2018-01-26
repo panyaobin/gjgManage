@@ -734,7 +734,7 @@
       padding:0cm 5.4pt 0cm 5.4pt;height:24.95pt'>
                         <p class=MsoNormal align=center style='text-align:center;mso-pagination:widow-orphan'><span
                                 lang=EN-US style='font-size:12.0pt;font-family:宋体;mso-bidi-font-family:宋体;
-      color:black;mso-font-kerning:0pt'>${print.wide*print.leng*print.counts/1000000}<o:p></o:p></span></p>
+      color:black;mso-font-kerning:0pt'><fmt:formatNumber type="number" value="${print.wide*print.leng*print.counts/1000000}" pattern="0.000" maxFractionDigits="3"/></span></p>
                     </td>
                 </c:if>
                 <c:if test="${print.proModel==''}">
